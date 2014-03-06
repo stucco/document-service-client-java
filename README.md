@@ -1,3 +1,15 @@
+# Install
+    mvn install
+
+# Maven Dependency
+After Maven installs document-service-client-java, another Maven project can use it by including a dependency:
+
+    <dependency>
+      <groupId>gov.pnnl.stucco</groupId>
+      <artifactId>doc-server-client-java</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
 # Quick start
 
     // client a client with specified host and port
