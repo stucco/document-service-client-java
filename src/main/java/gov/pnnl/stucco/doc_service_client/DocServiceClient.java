@@ -39,12 +39,22 @@ public class DocServiceClient {
     
     /**
      * Constructs client with specified connection information
+     * Supported configuration items are "host" and "port" (both are Strings)
      * @param config options that contain information on client connection to server
+     * @throws DocServiceException
      */
-    public DocServiceClient(Map<String, Object> config) {
-        if( config != null) {             
-            this.host = (String) config.get("host");
-            this.port = (Integer) config.get("port");
+    public DocServiceClient(Map<String, Object> config) throws DocServiceException {
+        if (config == null) throw new DocServiceException("config is null");
+
+        this.host = (String) config.get("host");
+        if (this.host != null) throw new DocServiceException("host is null");
+
+        String portStr = (String) config.get("port");
+        try {
+            this.port = Integer.parseInt(portStr);
+        }
+        catch (NumberFormatException e) {
+            throw new DocServiceException("invalid port", e);
         }
     }
 
@@ -52,6 +62,7 @@ public class DocServiceClient {
      * Stores document in the document service
      * @param doc the document to store
      * @return Document ID
+     * @throws DocServiceException
      */
     public String store(DocumentObject doc) throws DocServiceException {
         return store(doc, "");
@@ -96,6 +107,7 @@ public class DocServiceClient {
      * @param doc the document to store
      * @param id the document ID
      * @return Document ID
+     * @throws DocServiceException
      */
     public String store(DocumentObject doc, String id) throws DocServiceException {
         String idFromServer;
@@ -114,9 +126,9 @@ public class DocServiceClient {
      * Fetches document from the document service
      * @param id the id of document to fetch
      * @return Document
-     * @throws IOException
+     * @throws DocServiceException
      */
-    public DocumentObject fetch(String id) throws DocServiceException{
+    public DocumentObject fetch(String id) throws DocServiceException {
         DocumentObject doc;
         try {
             InputStream stream = HttpHelper.get(makeURL(id));
