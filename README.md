@@ -31,3 +31,7 @@ After Maven installs document-service-client-java, another Maven project can use
     
     // get data as String
     String dataStr = doc.getDataAsString();
+
+    // get extracted text from document
+    JSONObject json = docServiceClient.fetchExtractedText(docId);
+    String extractedText = json.getString("text");

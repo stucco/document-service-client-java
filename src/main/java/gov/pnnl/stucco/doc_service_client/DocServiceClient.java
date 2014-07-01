@@ -116,7 +116,7 @@ public class DocServiceClient {
     public String store(DocumentObject doc, String id) throws DocServiceException {
         String idFromServer;
         try {
-            InputStream response = HttpHelper.put(makeURL(id), doc.getContentType(), doc.getDataAsBytes());
+            InputStream response = HttpHelper.put(makeURL(id, false), doc.getContentType(), doc.getDataAsBytes());
             idFromServer = getId(IOUtils.toString(response));
         } catch (IOException e) {
             throw new DocServiceException("Cannot store to document server", e);
@@ -125,7 +125,7 @@ public class DocServiceClient {
         }
         return idFromServer;
     }
-    
+
     /**
      * Fetches document from the document service
      * @param id the id of document to fetch
@@ -133,16 +133,41 @@ public class DocServiceClient {
      * @throws DocServiceException
      */
     public DocumentObject fetch(String id) throws DocServiceException {
+        return fetch(id, "application/octet-stream", false);
+    }
+
+    /**
+     * Fetches extracted text from a document from the document service
+     * @param id the id of document to fetch
+     * @return Extracted text (in JSONObject) from fetched document
+     * @throws DocServiceException
+     * @throws JSONException
+     */
+    public JSONObject fetchExtractedText(String id) throws DocServiceException, JSONException {
+        DocumentObject doc = fetch(id, "application/json", true);
+        JSONObject json = new JSONObject(doc.getDataAsString());
+        return json;
+    }
+
+    /**
+     * Fetches document from the document service
+     * @param id the id of document to fetch
+     * @param acceptType type of data to accept from server
+     * @param extractText if true, then ask the document server to the extract text
+     * @return Document
+     * @throws DocServiceException
+     */
+    public DocumentObject fetch(String id, String acceptType, boolean extractText) throws DocServiceException {
         DocumentObject doc;
         try {
-            InputStream stream = HttpHelper.get(makeURL(id));
+            InputStream stream = HttpHelper.get(makeURL(id, extractText), acceptType);
             doc = new DocumentObject(stream);
         } catch (IOException e) {
             throw new DocServiceException("Cannot fetch from document server", e);
         }
         return doc;
     }
-    
+
     /**
      * Gets document ID from server response
      * @param serverResponse
@@ -157,13 +182,17 @@ public class DocServiceClient {
     /**
      * Makes a URL given a document ID
      * @param id the document ID
+     * @param extractText if true, then ask the document server to the extract text
      * @return URL for the client to connect to
      * @throws MalformedURLException
      */
-    private URL makeURL(String id) throws MalformedURLException  {
+    private URL makeURL(String id, boolean extractText) throws MalformedURLException  {
         String urlString = "http://" + host + ":" + Integer.toString(port) + "/document";
         if (!id.isEmpty()) {
             urlString = urlString + "/" + id;
+        }
+        if (extractText) {
+            urlString += "?extract=true";
         }
         return new URL(urlString);
     }

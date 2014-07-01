@@ -15,15 +15,16 @@ public class HttpHelper {
     /**
      * Sends HTTP GET request
      * @param url the URL to connect to
+     * @param acceptType the type of data to accept
      * @return Streamed response from server
      * @throws IOException
      * @throws ProtocolException
      */
-    public static InputStream get(URL url) throws IOException, ProtocolException {
+    public static InputStream get(URL url, String acceptType) throws IOException, ProtocolException {
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setDoOutput(true);
         con.setRequestMethod("GET");
-        con.setRequestProperty("accept", "application/octet-stream");
+        con.setRequestProperty("accept", acceptType);
         return con.getInputStream();
     }
     
