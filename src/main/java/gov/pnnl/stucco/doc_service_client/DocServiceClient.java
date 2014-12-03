@@ -116,7 +116,7 @@ public class DocServiceClient {
     public String store(DocumentObject doc, String id) throws DocServiceException {
         String idFromServer;
         try {
-            InputStream response = HttpHelper.put(makeURL(id, false), doc.getContentType(), doc.getDataAsBytes());
+            InputStream response = HttpHelper.post(makeURL(id, false), doc.getContentType(), doc.getDataAsBytes());
             idFromServer = getId(IOUtils.toString(response));
         } catch (IOException e) {
             throw new DocServiceException("Cannot store to document server", e);
