@@ -2,6 +2,8 @@ package gov.pnnl.stucco.doc_service_client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -16,6 +18,10 @@ public class DocumentObject {
     
     // The document is stored as raw bytes
     private byte[] bytes;
+    
+    /** Map holding the metadata for the document, defaulting to empty. */
+    private Map<String, String> metadata = new HashMap<String, String>();
+    
     
     /**
      * Constructs a DocumentObject from an InputStream
@@ -65,6 +71,14 @@ public class DocumentObject {
         this.contentType = contentType;
     }
     
+    public Map<String, String> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+    }
+
     /**
      * Gets the contents of the document as raw bytes
      * @return bytes

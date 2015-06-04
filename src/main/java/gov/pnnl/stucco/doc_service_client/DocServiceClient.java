@@ -2,8 +2,12 @@ package gov.pnnl.stucco.doc_service_client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -14,6 +18,9 @@ import org.json.JSONObject;
  * Client to add and get objects to and from a document service
  */
 public class DocServiceClient {
+
+    /** Stucco metadata key for extraction. */
+    private static final String EXTRACT = "extract";
 
     // IP address or host name
     private String host = "localhost";
@@ -116,7 +123,11 @@ public class DocServiceClient {
     public String store(DocumentObject doc, String id) throws DocServiceException {
         String idFromServer;
         try {
-            InputStream response = HttpHelper.post(makeURL(id, false), doc.getContentType(), doc.getDataAsBytes());
+            // Add key-value for no extraction
+            Map<String, String> metadata = doc.getMetadata();
+            metadata.put(EXTRACT, String.valueOf(false));
+            
+            InputStream response = HttpHelper.post(makeURL(id, metadata), doc.getContentType(), doc.getDataAsBytes());
             idFromServer = getId(IOUtils.toString(response));
         } catch (IOException e) {
             throw new DocServiceException("Cannot store to document server", e);
@@ -160,7 +171,11 @@ public class DocServiceClient {
     public DocumentObject fetch(String id, String acceptType, boolean extractText) throws DocServiceException {
         DocumentObject doc;
         try {
-            InputStream stream = HttpHelper.get(makeURL(id, extractText), acceptType);
+            // Put extraction flag in the argument (metadata) map
+            Map<String, String> args = new HashMap<String, String>();
+            args.put(EXTRACT, String.valueOf(extractText));
+            
+            InputStream stream = HttpHelper.get(makeURL(id, args), acceptType);
             doc = new DocumentObject(stream);
         } catch (IOException e) {
             throw new DocServiceException("Cannot fetch from document server", e);
@@ -182,18 +197,60 @@ public class DocServiceClient {
     /**
      * Makes a URL given a document ID
      * @param id the document ID
-     * @param extractText if true, then ask the document server to the extract text
+     * @param metadata  Metadata for the document
+     * 
      * @return URL for the client to connect to
      * @throws MalformedURLException
      */
-    private URL makeURL(String id, boolean extractText) throws MalformedURLException  {
-        String urlString = "http://" + host + ":" + Integer.toString(port) + "/document";
+    private URL makeURL(String id, Map<String, String> metadata) throws MalformedURLException  {
+        // Build main part of URL
+        StringBuilder builder = new StringBuilder();
+        builder.append("http://");
+        builder.append(host);
+        builder.append(':');
+        builder.append(port);
+        builder.append("/document");
+        
         if (!id.isEmpty()) {
-            urlString = urlString + "/" + id;
+            // We have a document ID, so add it
+            builder.append('/');
+            builder.append(id);
         }
-        if (extractText) {
-            urlString += "?extract=true";
+
+        if (!metadata.isEmpty()) {
+            // We have metadata, so start query string part of the URL
+            builder.append('?');
+            
+            // For each key-value pair
+            for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+
+                try {
+                    // Encode appropriately to avoid invalid chars in the URL
+                    String encoding = StandardCharsets.UTF_8.name();
+                    key = URLEncoder.encode(key, encoding);
+                    value = URLEncoder.encode(value, encoding);
+                } 
+                catch (UnsupportedEncodingException e) {
+                    // Will never happen since UTF-8 is a supported encoding
+                    e.printStackTrace();
+                }
+
+                // Add the pair
+                builder.append(key);
+                builder.append('=');
+                builder.append(value);
+                
+                // And the delimiter...
+                builder.append('&');
+            }
+            
+            //...except we don't want an & at the very end
+            builder.deleteCharAt(builder.length() - 1);
         }
+        
+        String urlString = builder.toString();
         return new URL(urlString);
     }
 }   
