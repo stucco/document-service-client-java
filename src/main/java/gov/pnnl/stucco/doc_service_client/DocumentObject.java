@@ -13,10 +13,10 @@ import org.apache.commons.io.IOUtils;
  */
 public class DocumentObject {
     
-    // Specifies the content type of the document
+    /** Specifies the content type of the document. */
     private String contentType = "application/octet-stream";
     
-    // The document is stored as raw bytes
+    /** The document is stored as raw bytes. */
     private byte[] bytes;
     
     /** Map holding the metadata for the document, defaulting to empty. */

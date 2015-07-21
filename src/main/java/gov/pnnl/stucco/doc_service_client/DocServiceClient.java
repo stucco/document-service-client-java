@@ -52,13 +52,13 @@ public class DocServiceClient {
      */
     public DocServiceClient(Map<String, Object> config) throws DocServiceException {
         if (config == null) {
-		throw new DocServiceException("config is null");
-	}
+            throw new DocServiceException("config is null");
+        }
 
         this.host = (String) config.get("host");
         if (this.host == null) {
-		throw new DocServiceException("host is null");
-	}
+            throw new DocServiceException("host is null");
+        }
 
         String portStr = (String) config.get("port");
         try {
